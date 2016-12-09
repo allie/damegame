@@ -1071,23 +1071,23 @@ static void CB(void) {
 
 // Table of function pointers indexed by opcode
 static void (*ops[256])() = {
-/*	|	0   |   1   |	2   |   3   |	4	|   5   |	6   |   7   |	8   |	9   |	A   |   B  |	C   |   D   |	E   |   F  | */
-/* 0 */ NOP	, LDBCnn, LDmBCa , INCBC , INCb	, DECb  , LDbn   , RLCA  , LDmnnSP, ADDHLBC, LDamBC , DECBC, INCc   , DECc  , LDcn   , RRCA ,
-/* 1 */ STOP   , LDDEnn, LDmDEa , INCDE , INCd	, DECd  , LDdn   , RLA   , JRn	, ADDHLDE, LDamDE , DECDE, INCe   , DECe  , LDen   , RRA  ,
-/* 2 */ JRNZn  , LDHLnn, LDImHLa, INCHL , INCh	, DECh  , LDhn   , DAA   , JRZn   , ADDHLHL, LDIamHL, DECHL, INCl   , DECl  , LDln   , CPL  ,
+/*    |    0   |   1   |    2   |   3   |    4    |   5   |    6   |   7   |    8   |    9   |    A   |   B  |    C   |   D   |    E   |   F  | */
+/* 0 */ NOP    , LDBCnn, LDmBCa , INCBC , INCb    , DECb  , LDbn   , RLCA  , LDmnnSP, ADDHLBC, LDamBC , DECBC, INCc   , DECc  , LDcn   , RRCA ,
+/* 1 */ STOP   , LDDEnn, LDmDEa , INCDE , INCd    , DECd  , LDdn   , RLA   , JRn    , ADDHLDE, LDamDE , DECDE, INCe   , DECe  , LDen   , RRA  ,
+/* 2 */ JRNZn  , LDHLnn, LDImHLa, INCHL , INCh    , DECh  , LDhn   , DAA   , JRZn   , ADDHLHL, LDIamHL, DECHL, INCl   , DECl  , LDln   , CPL  ,
 /* 3 */ JRNCn  , LDSPnn, LDDmHLa, INCSP , INCmHL  , DECmHL, LDmHLn , SCF   , JRCn   , ADDHLSP, LDDamHL, DECSP, INCa   , DECa  , LDan   , CCF  ,
-/* 4 */ LDbb   , LDbc  , LDbd   , LDbe  , LDbh	, LDbl  , LDbmHL , LDba  , LDcb   , LDcc   , LDcd   , LDce , LDch   , LDcl  , LDcmHL , LDca ,
-/* 5 */ LDdb   , LDdc  , LDdd   , LDde  , LDdh	, LDdl  , LDdmHL , LDda  , LDeb   , LDec   , LDed   , LDee , LDeh   , LDel  , LDemHL , LDea ,
-/* 6 */ LDhb   , LDhc  , LDhd   , LDhe  , LDhh	, LDhl  , LDhmHL , LDha  , LDlb   , LDlc   , LDld   , LDle , LDlh   , LDll  , LDlmHL , LDla ,
+/* 4 */ LDbb   , LDbc  , LDbd   , LDbe  , LDbh    , LDbl  , LDbmHL , LDba  , LDcb   , LDcc   , LDcd   , LDce , LDch   , LDcl  , LDcmHL , LDca ,
+/* 5 */ LDdb   , LDdc  , LDdd   , LDde  , LDdh    , LDdl  , LDdmHL , LDda  , LDeb   , LDec   , LDed   , LDee , LDeh   , LDel  , LDemHL , LDea ,
+/* 6 */ LDhb   , LDhc  , LDhd   , LDhe  , LDhh    , LDhl  , LDhmHL , LDha  , LDlb   , LDlc   , LDld   , LDle , LDlh   , LDll  , LDlmHL , LDla ,
 /* 7 */ LDmHLb , LDmHLc, LDmHLd , LDmHLe, LDmHLh  , LDmHLl, HALT   , LDmHLa, LDab   , LDac   , LDad   , LDae , LDah   , LDal  , LDamHL , LDaa ,
 /* 8 */ ADDab  , ADDac , ADDad  , ADDae , ADDah   , ADDal , ADDamHL, ADDaa , ADCab  , ADCac  , ADCad  , ADCae, ADCah  , ADCal , ADCamHL, ADCaa,
 /* 9 */ SUBab  , SUBac , SUBad  , SUBae , SUBah   , SUBal , SUBamHL, SUBaa , SBCab  , SBCac  , SBCad  , SBCae, SBCah  , SBCal , SBCamHL, SBCaa,
-/* A */ ANDb   , ANDc  , ANDd   , ANDe  , ANDh	, ANDl  , ANDmHL , ANDa  , XORb   , XORc   , XORd   , XORe , XORh   , XORl  , XORmHL , XORa ,
-/* B */ ORb	, ORc   , ORd	, ORe   , ORh	 , ORl   , ORmHL  , ORa   , CPb	, CPc	, CPd	, CPe  , CPh	, CPl   , CPmHL  , CPa  ,
-/* C */ RETNZ  , POPBC , JPNZnn , JPnn  , CALLNZnn, PUSHBC, ADDan  , RST0  , RETZ   , RET	, JPZnn  , CB   , CALLZnn, CALLnn, ADCan  , RST8 ,
+/* A */ ANDb   , ANDc  , ANDd   , ANDe  , ANDh    , ANDl  , ANDmHL , ANDa  , XORb   , XORc   , XORd   , XORe , XORh   , XORl  , XORmHL , XORa ,
+/* B */ ORb    , ORc   , ORd    , ORe   , ORh     , ORl   , ORmHL  , ORa   , CPb    , CPc    , CPd    , CPe  , CPh    , CPl   , CPmHL  , CPa  ,
+/* C */ RETNZ  , POPBC , JPNZnn , JPnn  , CALLNZnn, PUSHBC, ADDan  , RST0  , RETZ   , RET    , JPZnn  , CB   , CALLZnn, CALLnn, ADCan  , RST8 ,
 /* D */ RETNC  , POPDE , JPNCnn , NOP   , CALLNCnn, PUSHDE, SUBan  , RST10 , RETC   , RETI   , JPCnn  , NOP  , CALLCnn, NOP   , SBCan  , RST18,
-/* E */ LDHmna , POPHL , LDmca  , NOP   , NOP	 , PUSHHL, ANDn   , RST20 , ADDSPn , JPmHL  , LDmnna , NOP  , NOP	, NOP   , XORn   , RST28,
-/* F */ LDHamn , POPAF , LDamc  , DI	, NOP	 , PUSHAF, ORn	, RST30 , LDHLSPn, LDSPHL , LDamnn , EI   , NOP	, NOP   , CPn	, RST38
+/* E */ LDHmna , POPHL , LDmca  , NOP   , NOP     , PUSHHL, ANDn   , RST20 , ADDSPn , JPmHL  , LDmnna , NOP  , NOP    , NOP   , XORn   , RST28,
+/* F */ LDHamn , POPAF , LDamc  , DI    , NOP     , PUSHAF, ORn    , RST30 , LDHLSPn, LDSPHL , LDamnn , EI   , NOP    , NOP   , CPn    , RST38
 };
 
 // M clock values
