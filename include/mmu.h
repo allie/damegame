@@ -4,8 +4,9 @@
 #include "common.h"
 
 typedef struct {
-	BYTE bios[256];
 	BYTE in_bios;
+	BYTE* bios;
+	BYTE* rom;
 	BYTE* eram;
 	BYTE* wram;
 	BYTE* zram;
@@ -17,9 +18,11 @@ typedef struct {
 void MMU_init();
 void MMU_reset();
 
-BYTE MMU_read_8(WORD addr);
-void MMU_write_8(WORD addr, BYTE val);
-WORD MMU_read_16(WORD addr);
-void MMU_write_16(WORD addr, WORD val);
+void MMU_load_bios(BYTE*);
+
+BYTE MMU_read_8(WORD);
+void MMU_write_8(WORD, BYTE);
+WORD MMU_read_16(WORD);
+void MMU_write_16(WORD, WORD);
 
 #endif
