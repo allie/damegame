@@ -17,11 +17,11 @@ debug: CFLAGS += -D__DEBUG__
 debug: all
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) -o $@ $(OBJECTS) $(LDFLAGS)
+	$(CC) `pkg-config --cflags gtk+-3.0` -o $@ $(OBJECTS) `pkg-config --libs gtk+-3.0` $(LDFLAGS)
 	find src -name "*.o" -print0 | xargs -0 rm -rf
 
 .c.o:
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) `pkg-config --cflags gtk+-3.0` $(CFLAGS) $< -o $@
 
 clean:
 	rm -f $(EXECUTABLE)
