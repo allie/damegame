@@ -110,7 +110,7 @@ static BYTE* MMU_get_ptr(WORD addr) {
 
 void MMU_init() {
 	mmu.bios = (BYTE*)calloc(0x100, sizeof(BYTE));
-	mmu.rom = (BYTE*)calloc(0x4000, sizeof(BYTE));
+	mmu.rom = (BYTE*)calloc(0x8000, sizeof(BYTE));
 	mmu.eram = (BYTE*)calloc(0x2000, sizeof(BYTE));
 	mmu.wram = (BYTE*)calloc(0x2000, sizeof(BYTE));
 	mmu.zram = (BYTE*)calloc(0x80, sizeof(BYTE));
