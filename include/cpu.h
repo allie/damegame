@@ -44,7 +44,7 @@ extern MMU mmu;
 typedef struct {
 	DWORD m; // Machine cycles
 	DWORD t; // Clock periods
-} cpuclock;
+} pclock;
 
 typedef struct {
 	union {
@@ -60,8 +60,8 @@ typedef struct {
 	WORD pc; // Program counter
 	WORD sp; // Stack pointer
 
-	cpuclock sys_clock; // Master clock
-	cpuclock ins_clock; // Last instruction clock
+	pclock sys_clock; // Master clock
+	pclock ins_clock; // Last instruction clock
 
 	BYTE op;    // Current opcode
 	BYTE cb_op; // Current opcode (0xCB prefix)
@@ -74,5 +74,6 @@ typedef struct {
 // Executive functions
 void CPU_reset(void);
 int CPU_run(DWORD);
+int CPU_step();
 
 #endif

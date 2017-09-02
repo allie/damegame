@@ -1,11 +1,11 @@
 #include <string.h>
 #include "mmu.h"
 #include "cpu.h"
-// #include "gpu.h"
+#include "gpu.h"
 
 MMU mmu;
 extern CPU cpu;
-// extern GPU gpu;
+extern GPU gpu;
 
 static BYTE* MMU_get_ptr(WORD addr) {
 	switch (addr & 0xF000) {
@@ -41,7 +41,7 @@ static BYTE* MMU_get_ptr(WORD addr) {
 	// VRAM
 	case 0x8000:
 	case 0x9000:
-		// return gpu.vram + (addr & 0x1FFF);
+		return gpu.vram + (addr & 0x1FFF);
 		break;
 
 	// ERAM
@@ -109,11 +109,11 @@ static BYTE* MMU_get_ptr(WORD addr) {
 }
 
 void MMU_init() {
-	mmu.bios = (BYTE*)calloc(0x100, sizeof(BYTE));
-	mmu.rom = (BYTE*)calloc(0x8000, sizeof(BYTE));
-	mmu.eram = (BYTE*)calloc(0x2000, sizeof(BYTE));
-	mmu.wram = (BYTE*)calloc(0x2000, sizeof(BYTE));
-	mmu.zram = (BYTE*)calloc(0x80, sizeof(BYTE));
+	memset(mmu.bios, 0, 0x100);
+	memset(mmu.rom, 0, 0x4000);
+	memset(mmu.eram, 0, 0x2000);
+	memset(mmu.wram, 0, 0x2000);
+	memset(mmu.zram, 0, 0x80);
 }
 
 void MMU_load_bios(BYTE* bios) {
@@ -134,6 +134,11 @@ void MMU_write_8(WORD addr, BYTE val) {
 	BYTE* ptr = MMU_get_ptr(addr);
 	if (ptr) {
 		*ptr = val;
+
+		// Update the GPU tileset
+		if ((addr & 0xF000) == 0x8000 || (addr & 0xF000) == 0x9000) {
+			GPU_update_tile(addr);
+		}
 	}
 }
 

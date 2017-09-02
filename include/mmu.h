@@ -5,11 +5,11 @@
 
 typedef struct {
 	BYTE in_bios;
-	BYTE* bios;
-	BYTE* rom;
-	BYTE* eram;
-	BYTE* wram;
-	BYTE* zram;
+	BYTE bios[0x100];
+	BYTE rom[0x8000];
+	BYTE eram[0x2000];
+	BYTE wram[0x2000];
+	BYTE zram[0x80];
 #ifdef __DEBUG__
 	BYTE* ram;
 #endif

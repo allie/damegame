@@ -1192,36 +1192,36 @@ void CPU_reset(void) {
 	cpu.ins_clock.t = 0;
 }
 
+int CPU_step() {
+	cpu.ins_clock.m = 0;
+
+	// TODO: Interrupts
+
+	cpu.op = MMU_read_8(REG_PC++);
+
+	(*ops[cpu.op])();
+
+	if (cpu.op != 0xCB) {
+		cpu.ins_clock.m += timings_m[cpu.op];
+		cpu.ins_clock.t = timings_t[cpu.op];
+	} else {
+		cpu.ins_clock.m += cb_timings_m[cpu.cb_op];
+	}
+	/* TODO: ^ replace with:
+		cpu.ins_clock.t = CEIL(cpu.ins_clock.m / 4.0)
+	*/
+	cpu.sys_clock.m += cpu.ins_clock.m;
+	cpu.sys_clock.t += cpu.ins_clock.t;
+
+	return cpu.ins_clock.m;
+}
+
 int CPU_run(DWORD cycles) {
 	DWORD total = 0;
 
 	while (total < cycles) {
-		cpu.ins_clock.m = 0;
-
-		// TODO: Interrupts
-
-		cpu.op = MMU_read_8(REG_PC++);
-
-		(*ops[cpu.op])();
-
-		if (cpu.op != 0xCB) {
-			cpu.ins_clock.m += timings_m[cpu.op];
-			cpu.ins_clock.t = timings_t[cpu.op];
-		} else {
-			cpu.ins_clock.m += cb_timings_m[cpu.cb_op];
-		}
-		/* TODO: ^ replace with:
-			cpu.ins_clock.t = CEIL(cpu.ins_clock.m / 4.0)
-		*/
-		cpu.sys_clock.m += cpu.ins_clock.m;
-		cpu.sys_clock.t += cpu.ins_clock.t;
-
-		total += cpu.ins_clock.m;
+		total += CPU_step();
 	}
-
-#ifdef __DEBUG__
-		print_cpu();
-#endif
 
 	return 0;
 }

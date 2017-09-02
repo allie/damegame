@@ -10,11 +10,12 @@ void Cart_load_from_file(const char* path) {
 	long size = ftell(fp);
 	rewind(fp);
 
-	if (size == 0x4000) {
-		fread(mmu.rom, size, sizeof(BYTE), fp);
-	} else {
-		// ROM fail
-	}
+	fread(mmu.rom, size, sizeof(BYTE), fp);
+	// if (size == 0x4000) {
+	// 	fread(mmu.rom, size, sizeof(BYTE), fp);
+	// } else {
+	// 	// ROM fail
+	// }
 
 	fclose(fp);
 }
