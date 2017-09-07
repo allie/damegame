@@ -54,7 +54,7 @@ void UI_init() {
 	debugger.base_width = 320;
 	debugger.base_height = 240;
 	debugger.scale = 1;
-	debugger.window = SDL_CreateWindow("cgb Debugger", 612, 100, debugger.base_width, debugger.base_height, SDL_WINDOW_SHOWN);
+	debugger.window = SDL_CreateWindow("cgb Debugger", 276, 100, debugger.base_width, debugger.base_height, SDL_WINDOW_SHOWN);
 	if (debugger.window == NULL) {
 		printf("SDL_CreateWindow error: %s\n", SDL_GetError());
 		SDL_Quit();
@@ -73,11 +73,11 @@ void UI_init() {
 	debugger.font = SDL_CreateTexture(debugger.renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STATIC, 128, 128);
 	SDL_UpdateTexture(debugger.font, NULL, (void*)font_tex, 128 * 3);
 
-	options.visible = 1;
+	options.visible = 0;
 	options.base_width = 320;
 	options.base_height = 240;
 	options.scale = 1;
-	options.window = SDL_CreateWindow("cgb Options", 276, 100, options.base_width, options.base_height, SDL_WINDOW_SHOWN);
+	options.window = SDL_CreateWindow("cgb Options", 612, 100, options.base_width, options.base_height, SDL_WINDOW_HIDDEN);
 	if (options.window == NULL) {
 		printf("SDL_CreateWindow error: %s\n", SDL_GetError());
 		SDL_Quit();
@@ -124,6 +124,12 @@ void UI_render_string(UIWindow* ui_window, const char* text, unsigned x, unsigne
 	}
 }
 
+void UI_render_hex(UIWindow* ui_window, unsigned long val, unsigned bytes, unsigned x, unsigned y) {
+	char hex[17];
+	snprintf(hex, bytes * 2 + 1, "%0*lX", bytes * 2, val);
+	UI_render_string(ui_window, hex, x, y);
+}
+
 void UI_toggle(UIWindow* ui_window) {
 	if (ui_window->visible) {
 		ui_window->visible = 0;
@@ -132,29 +138,6 @@ void UI_toggle(UIWindow* ui_window) {
 		ui_window->visible = 1;
 		SDL_ShowWindow(ui_window->window);
 	}
-}
-
-void UI_update(UIWindow* ui_window) {
-
-}
-
-void UI_draw(UIWindow* ui_window) {
-	if (ui_window == NULL) {
-		printf("shit\n");
-		return;
-	}
-
-	SDL_RenderClear(ui_window->renderer);
-
-	if (ui_window == &lcd) {
-		//
-	} else if (ui_window == &debugger) {
-		Debugger_draw();
-	} else if (ui_window == &options) {
-		//
-	}
-
-	SDL_RenderPresent(ui_window->renderer);
 }
 
 void UI_loop() {
@@ -193,6 +176,9 @@ void UI_loop() {
 					}
 					break;
 				}
+				if (active == &debugger) {
+					Debugger_handle_input(event);
+				}
 				break;
 			}
 
@@ -200,27 +186,28 @@ void UI_loop() {
 		}
 
 		if (lcd.visible) {
-			UI_update(&lcd);
+			// UI_update(&lcd);
 		}
 
 		if (debugger.visible) {
-			UI_update(&debugger);
+			// UI_update(&debugger);
+			Debugger_update();
 		}
 
 		if (options.visible) {
-			UI_update(&options);
+			// UI_update(&options);
 		}
 
 		if (lcd.visible) {
-			UI_draw(&lcd);
+			// UI_draw(&lcd);
 		}
 
 		if (debugger.visible) {
-			UI_draw(&debugger);
+			Debugger_draw();
 		}
 
 		if (options.visible) {
-			UI_draw(&options);
+			// UI_draw(&options);
 		}
 	}
 }

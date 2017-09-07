@@ -5,6 +5,7 @@
 #include "cart.h"
 #include "ui.h"
 #include <sdl2/sdl.h>
+#include <pthread.h>
 
 extern CPU cpu;
 extern GPU gpu;
@@ -24,8 +25,13 @@ void* emulate(void* vargp) {
 }
 
 int main(int argc, char** argv) {
+	MMU_init();
+	CPU_reset();
+	GPU_init();
+
 	UI_init();
-	// TODO: emulation loop here
+	pthread_t emu_thread;
+	pthread_create(&emu_thread, NULL, emulate, NULL);
 	UI_loop();
 	UI_destroy();
 
