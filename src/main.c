@@ -3,7 +3,6 @@
 #include "mmu.h"
 #include "gpu.h"
 #include "cart.h"
-#include <pthread.h>
 #include <sdl2/sdl.h>
 
 extern CPU cpu;
