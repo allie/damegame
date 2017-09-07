@@ -11,14 +11,14 @@ ifneq (, $(findstring mingw, $(OS)))
 	CC=gcc
 endif
 
-all: clean $(SOURCES) $(EXECUTABLE)
+all: $(SOURCES) $(EXECUTABLE)
 
 debug: CFLAGS += -D__DEBUG__
 debug: all
 
 $(EXECUTABLE): $(OBJECTS)
 	$(CC) -o $@ $(OBJECTS) $(LDFLAGS)
-	find src -name "*.o" -print0 | xargs -0 rm -rf
+	# find src -name "*.o" -print0 | xargs -0 rm -rf
 
 .c.o:
 	$(CC) $(CFLAGS) $< -o $@
