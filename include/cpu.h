@@ -39,7 +39,7 @@
 #define FLAG_H cpu.h
 #define FLAG_C cpu.c
 
-extern MMU mmu;
+#define HISTORY_LIMIT 0xFFFFFFFF
 
 typedef struct {
 	DWORD m; // Machine cycles
@@ -65,11 +65,17 @@ typedef struct {
 
 	BYTE op;    // Current opcode
 	BYTE cb_op; // Current opcode (0xCB prefix)
+	WORD operand; // Current operand
 
 	int halt; // HALT status
 	int stop; // STOP status
 	int ime;  // Interrupt mode enabled
 } CPU;
+
+typedef struct {
+	CPU states[HISTORY_LIMIT];
+	DWORD ptr;
+} CPU_history;
 
 // Executive functions
 void CPU_reset(void);

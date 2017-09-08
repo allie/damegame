@@ -1,6 +1,10 @@
 #include "cpu.h"
+#include "mmu.h"
+#include <string.h>
 
 CPU cpu;
+CPU_history cpu_history;
+extern MMU mmu;
 
 // Helper functions
 static void push(WORD val) {
@@ -355,13 +359,13 @@ static void LDae(void) { REG_A = REG_E; }
 static void LDah(void) { REG_A = REG_H; }
 static void LDal(void) { REG_A = REG_L; }
 static void LDaa(void) { REG_A = REG_A; }
-static void LDbn(void) { REG_B = MMU_read_8(REG_PC++); }
-static void LDcn(void) { REG_C = MMU_read_8(REG_PC++); }
-static void LDdn(void) { REG_D = MMU_read_8(REG_PC++); }
-static void LDen(void) { REG_E = MMU_read_8(REG_PC++); }
-static void LDhn(void) { REG_H = MMU_read_8(REG_PC++); }
-static void LDln(void) { REG_L = MMU_read_8(REG_PC++); }
-static void LDan(void) { REG_A = MMU_read_8(REG_PC++); }
+static void LDbn(void) { cpu.operand = MMU_read_8(REG_PC++); REG_B = cpu.operand; }
+static void LDcn(void) { cpu.operand = MMU_read_8(REG_PC++); REG_C = cpu.operand; }
+static void LDdn(void) { cpu.operand = MMU_read_8(REG_PC++); REG_D = cpu.operand; }
+static void LDen(void) { cpu.operand = MMU_read_8(REG_PC++); REG_E = cpu.operand; }
+static void LDhn(void) { cpu.operand = MMU_read_8(REG_PC++); REG_H = cpu.operand; }
+static void LDln(void) { cpu.operand = MMU_read_8(REG_PC++); REG_L = cpu.operand; }
+static void LDan(void) { cpu.operand = MMU_read_8(REG_PC++); REG_A = cpu.operand; }
 static void LDbmHL(void) { REG_B = MMU_read_8(REG_HL); }
 static void LDcmHL(void) { REG_C = MMU_read_8(REG_HL); }
 static void LDdmHL(void) { REG_D = MMU_read_8(REG_HL); }
@@ -376,12 +380,12 @@ static void LDmHLe(void) { MMU_write_8(REG_HL, REG_E); }
 static void LDmHLh(void) { MMU_write_8(REG_HL, REG_H); }
 static void LDmHLl(void) { MMU_write_8(REG_HL, REG_L); }
 // LD d <- n
-static void LDmHLn(void) { MMU_write_8(REG_HL, MMU_read_8(REG_PC++)); }
+static void LDmHLn(void) { cpu.operand = MMU_read_8(REG_PC++); MMU_write_8(REG_HL, cpu.operand); }
 // LD A <- (ss)
-static void LDamBC(void) { REG_A = MMU_read_8(REG_BC); }
-static void LDamDE(void) { REG_A = MMU_read_8(REG_DE); }
-static void LDamHL(void) { REG_A = MMU_read_8(REG_HL); }
-static void LDamnn(void) { REG_A = MMU_read_8(MMU_read_16(REG_PC)); REG_PC += 2; }
+static void LDamBC(void) { cpu.operand = MMU_read_8(REG_BC); REG_A = cpu.operand; }
+static void LDamDE(void) { cpu.operand = MMU_read_8(REG_DE); REG_A = cpu.operand; }
+static void LDamHL(void) { cpu.operand = MMU_read_8(REG_HL); REG_A = cpu.operand; }
+static void LDamnn(void) { cpu.operand = MMU_read_16(REG_PC); REG_A = MMU_read_8(cpu.operand); REG_PC += 2; }
 // LD (dd) <- A
 static void LDmBCa(void) { MMU_write_8(MMU_read_16(REG_BC), REG_A); }
 static void LDmDEa(void) { MMU_write_8(MMU_read_16(REG_DE), REG_A); }
@@ -400,22 +404,22 @@ static void LDIamHL(void) { REG_A = MMU_read_8(REG_HL++); }
 // LDI (HL) <- A
 static void LDImHLa(void) { MMU_write_8(REG_HL++, REG_A); }
 // LDH (n) <- A
-static void LDHmna(void) { MMU_write_8(MMU_read_8(REG_PC++) + 0xFF00, REG_A); }
+static void LDHmna(void) { cpu.operand = MMU_read_8(REG_PC++); MMU_write_8(((BYTE)cpu.operand) + 0xFF00, REG_A); }
 // LDH A <- (n)
-static void LDHamn(void) { REG_A = MMU_read_8(0xFF00 + MMU_read_8(REG_PC++)); }
+static void LDHamn(void) { cpu.operand = MMU_read_8(REG_PC++); REG_A = MMU_read_8(0xFF00 + ((BYTE)cpu.operand)); }
 
 // 16-bit loads
 // LD dd, nn
-static void LDBCnn(void) { REG_BC = MMU_read_16(REG_PC); REG_PC += 2; }
-static void LDDEnn(void) { REG_DE = MMU_read_16(REG_PC); REG_PC += 2; }
-static void LDHLnn(void) { REG_HL = MMU_read_16(REG_PC); REG_PC += 2; }
-static void LDSPnn(void) { REG_SP = MMU_read_16(REG_PC); REG_PC += 2; }
+static void LDBCnn(void) { MMU_read_16(REG_PC); REG_BC = cpu.operand; REG_PC += 2; }
+static void LDDEnn(void) { MMU_read_16(REG_PC); REG_DE = cpu.operand; REG_PC += 2; }
+static void LDHLnn(void) { MMU_read_16(REG_PC); REG_HL = cpu.operand; REG_PC += 2; }
+static void LDSPnn(void) { MMU_read_16(REG_PC); REG_SP = cpu.operand; REG_PC += 2; }
 // LD (nn), SP
-static void LDmnnSP(void) { MMU_write_16(MMU_read_16(REG_PC), REG_SP); REG_PC += 2; }
+static void LDmnnSP(void) { cpu.operand = MMU_read_16(REG_PC); MMU_write_16(cpu.operand, REG_SP); REG_PC += 2; }
 // LD SP, HL
 static void LDSPHL(void) { REG_SP = REG_HL; }
 // LD HL, (SP + e)
-static void LDHLSPn(void) { REG_HL = add_16_8(REG_SP, MMU_read_8(REG_PC++)); }
+static void LDHLSPn(void) { cpu.operand = MMU_read_8(REG_PC++); REG_HL = add_16_8(REG_SP, cpu.operand); }
 // PUSH ss
 static void PUSHBC(void) { push(REG_BC); }
 static void PUSHDE(void) { push(REG_DE); }
@@ -436,7 +440,7 @@ static void ADDae(void) { REG_A = add_8_8(REG_A, REG_E); }
 static void ADDah(void) { REG_A = add_8_8(REG_A, REG_H); }
 static void ADDal(void) { REG_A = add_8_8(REG_A, REG_L); }
 static void ADDaa(void) { REG_A = add_8_8(REG_A, REG_A); }
-static void ADDan(void) { REG_A = add_8_8(REG_A, MMU_read_8(REG_PC++)); }
+static void ADDan(void) { cpu.operand = MMU_read_8(REG_PC++); REG_A = add_8_8(REG_A, cpu.operand); }
 static void ADDamHL(void) { REG_A = add_8_8(REG_A, MMU_read_8(REG_HL)); }
 // ADC A, s
 static void ADCab(void) { REG_A = adc(REG_A, REG_B); }
@@ -446,7 +450,7 @@ static void ADCae(void) { REG_A = adc(REG_A, REG_E); }
 static void ADCah(void) { REG_A = adc(REG_A, REG_H); }
 static void ADCal(void) { REG_A = adc(REG_A, REG_L); }
 static void ADCaa(void) { REG_A = adc(REG_A, REG_A); }
-static void ADCan(void) { REG_A = adc(REG_A, MMU_read_8(REG_PC++)); }
+static void ADCan(void) { cpu.operand = MMU_read_8(REG_PC++); REG_A = adc(REG_A, cpu.operand); }
 static void ADCamHL(void) { REG_A = adc(REG_A, MMU_read_8(REG_HL)); }
 // SUB s
 static void SUBab(void) { REG_A = sub(REG_A, REG_B); }
@@ -456,7 +460,7 @@ static void SUBae(void) { REG_A = sub(REG_A, REG_E); }
 static void SUBah(void) { REG_A = sub(REG_A, REG_H); }
 static void SUBal(void) { REG_A = sub(REG_A, REG_L); }
 static void SUBaa(void) { REG_A = sub(REG_A, REG_A); }
-static void SUBan(void) { REG_A = sub(REG_A, MMU_read_8(REG_PC++)); }
+static void SUBan(void) { cpu.operand = MMU_read_8(REG_PC++); REG_A = sub(REG_A, cpu.operand); }
 static void SUBamHL(void) { REG_A = sub(REG_A, MMU_read_8(REG_HL)); }
 // SBC A, s
 static void SBCab(void) { REG_A = sbc(REG_A, REG_B); }
@@ -466,7 +470,7 @@ static void SBCae(void) { REG_A = sbc(REG_A, REG_E); }
 static void SBCah(void) { REG_A = sbc(REG_A, REG_H); }
 static void SBCal(void) { REG_A = sbc(REG_A, REG_L); }
 static void SBCaa(void) { REG_A = sbc(REG_A, REG_A); }
-static void SBCan(void) { REG_A = sbc(REG_A, MMU_read_8(REG_PC++)); }
+static void SBCan(void) { cpu.operand = MMU_read_8(REG_PC++); REG_A = sbc(REG_A, cpu.operand); }
 static void SBCamHL(void) { REG_A = sbc(REG_A, MMU_read_8(REG_HL)); }
 // AND s
 static void ANDb(void) { REG_A = and(REG_A, REG_B); }
@@ -476,7 +480,7 @@ static void ANDe(void) { REG_A = and(REG_A, REG_E); }
 static void ANDh(void) { REG_A = and(REG_A, REG_H); }
 static void ANDl(void) { REG_A = and(REG_A, REG_L); }
 static void ANDa(void) { REG_A = and(REG_A, REG_A); }
-static void ANDn(void) { REG_A = and(REG_A, MMU_read_8(REG_PC++)); }
+static void ANDn(void) { cpu.operand = MMU_read_8(REG_PC++); REG_A = and(REG_A, cpu.operand); }
 static void ANDmHL(void) { REG_A = and(REG_A, MMU_read_8(REG_HL)); }
 // OR s
 static void ORb(void) { REG_A = or(REG_A, REG_B); }
@@ -486,7 +490,7 @@ static void ORe(void) { REG_A = or(REG_A, REG_E); }
 static void ORh(void) { REG_A = or(REG_A, REG_H); }
 static void ORl(void) { REG_A = or(REG_A, REG_L); }
 static void ORa(void) { REG_A = or(REG_A, REG_A); }
-static void ORn(void) { REG_A = or(REG_A, MMU_read_8(REG_PC++)); }
+static void ORn(void) { cpu.operand = MMU_read_8(REG_PC++); REG_A = or(REG_A, cpu.operand); }
 static void ORmHL(void) { REG_A = or(REG_A, MMU_read_8(REG_HL)); }
 // XOR s
 static void XORb(void) { REG_A = xor(REG_A, REG_B); }
@@ -496,7 +500,7 @@ static void XORe(void) { REG_A = xor(REG_A, REG_E); }
 static void XORh(void) { REG_A = xor(REG_A, REG_H); }
 static void XORl(void) { REG_A = xor(REG_A, REG_L); }
 static void XORa(void) { REG_A = xor(REG_A, REG_A); }
-static void XORn(void) { REG_A = xor(REG_A, MMU_read_8(REG_PC++)); }
+static void XORn(void) { cpu.operand = MMU_read_8(REG_PC++); REG_A = xor(REG_A, cpu.operand); }
 static void XORmHL(void) { REG_A = xor(REG_A, MMU_read_8(REG_HL)); }
 // CP s
 static void CPb(void) { sub(REG_A, REG_B); }
@@ -506,7 +510,7 @@ static void CPe(void) { sub(REG_A, REG_E); }
 static void CPh(void) { sub(REG_A, REG_H); }
 static void CPl(void) { sub(REG_A, REG_L); }
 static void CPa(void) { sub(REG_A, REG_A); }
-static void CPn(void) { sub(REG_A, MMU_read_8(REG_PC++)); }
+static void CPn(void) { cpu.operand = MMU_read_8(REG_PC++); sub(REG_A, cpu.operand); }
 static void CPmHL(void) { sub(REG_A, MMU_read_8(REG_HL)); }
 // INC s
 static void INCb(void) { REG_B = inc_8(REG_B); }
@@ -534,7 +538,7 @@ static void ADDHLDE(void) { REG_HL = add_16_16(REG_HL, REG_DE); }
 static void ADDHLHL(void) { REG_HL = add_16_16(REG_HL, REG_HL); }
 static void ADDHLSP(void) { REG_HL = add_16_16(REG_HL, REG_SP); }
 // ADD SP, e
-static void ADDSPn(void) { REG_SP = add_16_8(REG_SP, MMU_read_8(REG_PC++)); }
+static void ADDSPn(void) { cpu.operand = MMU_read_8(REG_PC++); REG_SP = add_16_8(REG_SP, cpu.operand); }
 // INC ss
 static void INCBC(void) { REG_BC = inc_16(REG_BC); }
 static void INCDE(void) { REG_DE = inc_16(REG_DE); }
@@ -871,11 +875,12 @@ static void RES7mHL(void) { res(MMU_read_8(REG_HL), 7); }
 
 // Jumps
 // JP nn
-static void JPnn(void) { REG_PC = MMU_read_16(REG_PC); }
+static void JPnn(void) { cpu.operand = MMU_read_16(REG_PC); REG_PC = cpu.operand; }
 // JP cc, nn
 static void JPZnn(void) {
 	if (FLAG_Z) {
-		REG_PC = MMU_read_16(REG_PC);
+		cpu.operand = MMU_read_16(REG_PC);
+		REG_PC = cpu.operand;
 		cpu.ins_clock.m = 4;
 		return;
 	}
@@ -884,7 +889,8 @@ static void JPZnn(void) {
 }
 static void JPCnn(void) {
 	if (FLAG_C) {
-		REG_PC = MMU_read_16(REG_PC);
+		cpu.operand = MMU_read_16(REG_PC);
+		REG_PC = cpu.operand;
 		cpu.ins_clock.m = 4;
 		return;
 	}
@@ -893,7 +899,8 @@ static void JPCnn(void) {
 }
 static void JPNZnn(void) {
 	if (!FLAG_Z) {
-		REG_PC = MMU_read_16(REG_PC);
+		cpu.operand = MMU_read_16(REG_PC);
+		REG_PC = cpu.operand;
 		cpu.ins_clock.m = 4;
 		return;
 	}
@@ -902,7 +909,8 @@ static void JPNZnn(void) {
 }
 static void JPNCnn(void) {
 	if (!FLAG_C) {
-		REG_PC = MMU_read_16(REG_PC);
+		cpu.operand = MMU_read_16(REG_PC);
+		REG_PC = cpu.operand;
 		cpu.ins_clock.m = 4;
 		return;
 	}
@@ -915,11 +923,12 @@ static void JPmHL(void) {
 	REG_PC = REG_HL;
 }
 // JR e
-static void JRn(void) { jr(MMU_read_8(REG_PC)); REG_PC++; }
+static void JRn(void) { cpu.operand = MMU_read_8(REG_PC); jr(cpu.operand); REG_PC++; }
 // JR cc, e
 static void JRZn(void) {
 	if (FLAG_Z) {
-		jr(MMU_read_8(REG_PC));
+		cpu.operand = MMU_read_8(REG_PC);
+		jr(cpu.operand);
 		REG_PC++;
 		cpu.ins_clock.m = 4;
 		return;
@@ -929,7 +938,8 @@ static void JRZn(void) {
 }
 static void JRCn(void) {
 	if (FLAG_C) {
-		jr(MMU_read_8(REG_PC));
+		cpu.operand = MMU_read_8(REG_PC);
+		jr(cpu.operand);
 		REG_PC++;
 		cpu.ins_clock.m = 4;
 		return;
@@ -939,7 +949,8 @@ static void JRCn(void) {
 }
 static void JRNZn(void) {
 	if (!FLAG_Z) {
-		jr(MMU_read_8(REG_PC));
+		cpu.operand = MMU_read_8(REG_PC);
+		jr(cpu.operand);
 		REG_PC++;
 		cpu.ins_clock.m = 4;
 		return;
@@ -949,7 +960,8 @@ static void JRNZn(void) {
 }
 static void JRNCn(void) {
 	if (!FLAG_C) {
-		jr(MMU_read_8(REG_PC));
+		cpu.operand = MMU_read_8(REG_PC);
+		jr(cpu.operand);
 		REG_PC++;
 		cpu.ins_clock.m = 4;
 		return;
@@ -964,7 +976,8 @@ static void CALLnn(void) { call(MMU_read_16(REG_PC)); }
 // CALL cc, nn
 static void CALLZnn(void) {
 	if (FLAG_Z) {
-		call(MMU_read_8(REG_PC));
+		cpu.operand = MMU_read_8(REG_PC);
+		call(cpu.operand);
 		cpu.ins_clock.m = 12;
 		return;
 	}
@@ -973,7 +986,8 @@ static void CALLZnn(void) {
 }
 static void CALLCnn(void) {
 	if (FLAG_C) {
-		call(MMU_read_8(REG_PC));
+		cpu.operand = MMU_read_8(REG_PC);
+		call(cpu.operand);
 		cpu.ins_clock.m = 12;
 		return;
 	}
@@ -982,7 +996,8 @@ static void CALLCnn(void) {
 }
 static void CALLNZnn(void) {
 	if (!FLAG_Z) {
-		call(MMU_read_8(REG_PC));
+		cpu.operand = MMU_read_8(REG_PC);
+		call(cpu.operand);
 		cpu.ins_clock.m = 12;
 		return;
 	}
@@ -991,7 +1006,8 @@ static void CALLNZnn(void) {
 }
 static void CALLNCnn(void) {
 	if (!FLAG_C) {
-		call(MMU_read_8(REG_PC));
+		cpu.operand = MMU_read_8(REG_PC);
+		call(cpu.operand);
 		cpu.ins_clock.m = 12;
 		return;
 	}
@@ -1138,36 +1154,6 @@ BYTE timings_t[/*256*/] = {
 	0 // Stuff
 };
 
-// Debug
-static void print_cpu(void) {
-	printf("AF     :  $%hx\n", REG_AF);
-	printf("BC     :  $%hx\n", REG_BC);
-	printf("DE     :  $%hx\n", REG_DE);
-	printf("HL     :  $%hx\n", REG_HL);
-	printf("A      :  $%hhx\n", REG_A);
-	printf("B      :  $%hhx\n", REG_B);
-	printf("C      :  $%hhx\n", REG_C);
-	printf("D      :  $%hhx\n", REG_D);
-	printf("E      :  $%hhx\n", REG_E);
-	printf("H      :  $%hhx\n", REG_H);
-	printf("L      :  $%hhx\n", REG_L);
-	printf("PC     :  $%hx\n", REG_PC);
-	printf("SP     :  $%hx\n", REG_SP);
-	printf("OP     :  $%hhx\n", cpu.op);
-	printf("CBOP   :  $%hhx\n", cpu.cb_op);
-	printf("FLAGZ  :  $%hhx\n", FLAG_Z);
-	printf("FLAGN  :  $%hhx\n", FLAG_N);
-	printf("FLAGH  :  $%hhx\n", FLAG_H);
-	printf("FLAGC  :  $%hhx\n", FLAG_C);
-	printf("IME    :  $%hhx\n", (BYTE)cpu.ime);
-	printf("HALT   :  $%hhx\n", (BYTE)cpu.halt);
-	printf("STOP   :  $%hhx\n", (BYTE)cpu.stop);
-	printf("SCLOCKM:  $%x\n", cpu.sys_clock.m);
-	printf("SCLOCKT:  $%x\n", cpu.sys_clock.t);
-	printf("ICLOCKM:  $%x\n", cpu.ins_clock.m);
-	printf("ICLOCKT:  $%x\n", cpu.ins_clock.t);
-}
-
 // Executive functions
 void CPU_reset(void) {
 	FLAG_Z = 1;
@@ -1193,6 +1179,9 @@ void CPU_reset(void) {
 }
 
 int CPU_step() {
+	// Stash the CPU state
+	memcpy(&(cpu_history.states[cpu_history.ptr++]), &cpu, sizeof(cpu));
+
 	cpu.ins_clock.m = 0;
 
 	// TODO: Interrupts

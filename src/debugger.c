@@ -17,7 +17,7 @@ enum {
 	TAB_LOG
 };
 // 　ROM0  0000  00 00 00 00  00 00 00 00
-static int tab = 0;
+static int tab = 1;
 static int mmu_top_row = 0;
 static char mmu_str[0x10000 / 8 * 38];
 
@@ -108,12 +108,12 @@ static void Debugger_format_memory_chunk(char* buf, BYTE* data, size_t size, con
 	for (int i = 0; i < size;) {
 		snprintf(buf + (*ptr), 6, "%5s", name);
 		(*ptr) += 5;
-		snprintf(buf + (*ptr), 7, "  %04X", off + i);
-		(*ptr) += 6;
+		snprintf(buf + (*ptr), 8, "  %04X ", off + i);
+		(*ptr) += 7;
 
 		for (int j = 0; j < 2; j++) {
-			snprintf(buf + (*ptr), 3, "  ");
-			(*ptr) += 2;
+			snprintf(buf + (*ptr), 2, " ");
+			(*ptr) += 1;
 
 			for (int k = 0; k < 4; k++) {
 				snprintf(buf + (*ptr), 4, "%02X ", data[i]);
@@ -122,9 +122,7 @@ static void Debugger_format_memory_chunk(char* buf, BYTE* data, size_t size, con
 			}
 		}
 
-		buf[(*ptr) - 2] = '\0';
-		buf[(*ptr) - 1] = 0;
-		(*ptr)--;
+		buf[(*ptr) - 1] = '\0';
 	}
 }
 
