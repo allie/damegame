@@ -1,84 +1,88 @@
 #include "debugger.h"
+#include "disassembler.h"
 #include "ui.h"
 #include "cpu.h"
 #include "mmu.h"
 #include "gpu.h"
+#include <sdl2/sdl.h>
 
-UIWindow debugger;
+extern UIWindow debugger;
 extern CPU cpu;
 extern MMU mmu;
 extern GPU gpu;
+extern CPU_history cpu_history;
+SDL_mutex* debugger_mutex;
 
 enum {
 	TAB_CPU = 0,
 	TAB_MMU,
 	TAB_GPU,
-	TAB_APU,
-	TAB_LOG
+	TAB_APU
 };
-// 　ROM0  0000  00 00 00 00  00 00 00 00
-static int tab = 1;
+
+static int tab = 0;
 static int mmu_top_row = 0;
 static char mmu_str[0x10000 / 8 * 38];
+static char ins_str[40 * 26];
 
-static void Debugger_print_registers() {
-	UI_render_string(&debugger, "REGISTERS", 0, 3);
-	UI_render_string(&debugger, "B", 0, 5);
-	UI_render_string(&debugger, "C", 0, 6);
-	UI_render_string(&debugger, "D", 0, 7);
-	UI_render_string(&debugger, "E", 0, 8);
-	UI_render_string(&debugger, "H", 0, 9);
-	UI_render_string(&debugger, "L", 0, 10);
-	UI_render_string(&debugger, "A", 0, 11);
-	UI_render_string(&debugger, "F", 0, 12);
-	UI_render_string(&debugger, "BC", 0, 13);
-	UI_render_string(&debugger, "DE", 0, 14);
-	UI_render_string(&debugger, "HL", 0, 15);
-	UI_render_string(&debugger, "AF", 0, 16);
-	UI_render_string(&debugger, "PC", 0, 17);
+static void Debugger_print_registers(int x, int y) {
+	UI_render_string(&debugger, "REGISTERS", x, y);
+	UI_render_string(&debugger, "B  0x", x, y + 2);
+	UI_render_string(&debugger, "C  0x", x, y + 3);
+	UI_render_string(&debugger, "D  0x", x, y + 4);
+	UI_render_string(&debugger, "E  0x", x, y + 5);
+	UI_render_string(&debugger, "H  0x", x, y + 6);
+	UI_render_string(&debugger, "L  0x", x, y + 7);
+	UI_render_string(&debugger, "A  0x", x, y + 8);
+	UI_render_string(&debugger, "F  0x", x, y + 9);
+	UI_render_string(&debugger, "BC 0x", x, y + 10);
+	UI_render_string(&debugger, "DE 0x", x, y + 11);
+	UI_render_string(&debugger, "HL 0x", x, y + 12);
+	UI_render_string(&debugger, "AF 0x", x, y + 13);
+	UI_render_string(&debugger, "PC 0x", x, y + 14);
 
-	UI_render_hex(&debugger, REG_B, 1, 3, 5);
-	UI_render_hex(&debugger, REG_C, 1, 3, 6);
-	UI_render_hex(&debugger, REG_D, 1, 3, 7);
-	UI_render_hex(&debugger, REG_E, 1, 3, 8);
-	UI_render_hex(&debugger, REG_H, 1, 3, 9);
-	UI_render_hex(&debugger, REG_L, 1, 3, 10);
-	UI_render_hex(&debugger, REG_A, 1, 3, 11);
-	UI_render_hex(&debugger, REG_F, 1, 3, 12);
-	UI_render_hex(&debugger, REG_BC, 2, 3, 13);
-	UI_render_hex(&debugger, REG_DE, 2, 3, 14);
-	UI_render_hex(&debugger, REG_HL, 2, 3, 15);
-	UI_render_hex(&debugger, REG_AF, 2, 3, 16);
-	UI_render_hex(&debugger, cpu.pc, 2, 3, 17);
+	UI_render_hex(&debugger, REG_B, 1, x + 5, y + 2);
+	UI_render_hex(&debugger, REG_C, 1, x + 5, y + 3);
+	UI_render_hex(&debugger, REG_D, 1, x + 5, y + 4);
+	UI_render_hex(&debugger, REG_E, 1, x + 5, y + 5);
+	UI_render_hex(&debugger, REG_H, 1, x + 5, y + 6);
+	UI_render_hex(&debugger, REG_L, 1, x + 5, y + 7);
+	UI_render_hex(&debugger, REG_A, 1, x + 5, y + 8);
+	UI_render_hex(&debugger, REG_F, 1, x + 5, y + 9);
+	UI_render_hex(&debugger, REG_BC, 2, x + 5, y + 10);
+	UI_render_hex(&debugger, REG_DE, 2, x + 5, y + 11);
+	UI_render_hex(&debugger, REG_HL, 2, x + 5, y + 12);
+	UI_render_hex(&debugger, REG_AF, 2, x + 5, y + 13);
+	UI_render_hex(&debugger, cpu.pc, 2, x + 5, y + 14);
 
-	UI_render_string(&debugger, "FLAGS", 12, 3);
-	UI_render_string(&debugger, "Z", 12, 5);
-	UI_render_string(&debugger, "N +", 12, 6);
-	UI_render_string(&debugger, "H -", 12, 7);
-	UI_render_string(&debugger, "C -", 12, 8);
+	UI_render_string(&debugger, "FLAGS", x + 12, y);
+	UI_render_string(&debugger, "Z", x + 12, y + 2);
+	UI_render_string(&debugger, "N", x + 12, y + 3);
+	UI_render_string(&debugger, "H", x + 12, y + 4);
+	UI_render_string(&debugger, "C", x + 12, y + 5);
 
 	if (FLAG_Z) {
-		UI_render_string(&debugger, "+", 14, 5);
+		UI_render_string(&debugger, "+", x + 14, y + 2);
 	} else {
-		UI_render_string(&debugger, "-", 14, 5);
+		UI_render_string(&debugger, "-", x + 14, y + 2);
 	}
 
 	if (FLAG_N) {
-		UI_render_string(&debugger, "+", 14, 6);
+		UI_render_string(&debugger, "+", x + 14, y + 3);
 	} else {
-		UI_render_string(&debugger, "-", 14, 6);
+		UI_render_string(&debugger, "-", x + 14, y + 3);
 	}
 
 	if (FLAG_H) {
-		UI_render_string(&debugger, "+", 14, 7);
+		UI_render_string(&debugger, "+", x + 14, y + 4);
 	} else {
-		UI_render_string(&debugger, "-", 14, 7);
+		UI_render_string(&debugger, "-", x + 14, y + 4);
 	}
 
 	if (FLAG_C) {
-		UI_render_string(&debugger, "+", 14, 8);
+		UI_render_string(&debugger, "+", x + 14, y + 5);
 	} else {
-		UI_render_string(&debugger, "-", 14, 8);
+		UI_render_string(&debugger, "-", x + 14, y + 5);
 	}
 }
 
@@ -90,6 +94,14 @@ static void Debugger_print_status() {
 	UI_render_string(&debugger, "<-", 18, 29);
 	UI_render_hex(&debugger, frames, 8, 21, 29);
 	UI_render_string(&debugger, "->", 38, 29);
+}
+
+static void Debugger_print_log() {
+	SDL_LockMutex(debugger_mutex);
+	for (int i = 0; i < 26; i++) {
+		UI_render_string(&debugger, ins_str + (i * 40), 0, 27 - i);
+	}
+	SDL_UnlockMutex(debugger_mutex);
 }
 
 static void Debugger_print_mmu() {
@@ -104,7 +116,6 @@ static void Debugger_print_mmu() {
 }
 
 static void Debugger_format_memory_chunk(char* buf, BYTE* data, size_t size, const char* name, int off, int* ptr) {
-	int ptr_old = *ptr;
 	for (int i = 0; i < size;) {
 		snprintf(buf + (*ptr), 6, "%5s", name);
 		(*ptr) += 5;
@@ -126,6 +137,18 @@ static void Debugger_format_memory_chunk(char* buf, BYTE* data, size_t size, con
 	}
 }
 
+static void Debugger_update_cpu() {
+	char buf[40 * 26];
+	for (int i = 0; i < 26; i++) {
+		DWORD history_addr = cpu_history.ptr < i + 1 ? 0xFFFF - i : cpu_history.ptr - i - 1;
+		Disassembler_print(cpu_history.states[history_addr], buf + (i * 40), 40);
+	}
+
+	SDL_LockMutex(debugger_mutex);
+	memcpy(ins_str, buf, 40 * 26);
+	SDL_UnlockMutex(debugger_mutex);
+}
+
 static void Debugger_update_mmu() {
 	int ptr = 0;
 	Debugger_format_memory_chunk(mmu_str, mmu.rom, 0x4000, "ROM0", 0, &ptr);
@@ -142,6 +165,10 @@ static void Debugger_change_tab(int diff) {
 	} else if (diff > 0 && tab < 4) {
 		tab++;
 	}
+}
+
+void Debugger_init() {
+	debugger_mutex = SDL_CreateMutex();
 }
 
 void Debugger_handle_input(SDL_Event event) {
@@ -166,6 +193,7 @@ void Debugger_handle_input(SDL_Event event) {
 void Debugger_update() {
 	switch (tab) {
 	case TAB_CPU:
+		Debugger_update_cpu();
 		break;
 	case TAB_MMU:
 		Debugger_update_mmu();
@@ -174,13 +202,15 @@ void Debugger_update() {
 }
 
 void Debugger_draw() {
+	SDL_SetRenderDrawColor(debugger.renderer, 0, 0, 0, 255);
 	SDL_RenderClear(debugger.renderer);
 
 	switch (tab) {
 	case TAB_CPU:
 		UI_render_string(&debugger, "<CPU> MMU  GPU  APU  LOG", 0, 0);
 		UI_render_string(&debugger, "-----------------------------------------------------", 0, 1);
-		Debugger_print_registers();
+		Debugger_print_log();
+		Debugger_print_registers(23, 2);
 		break;
 	case TAB_MMU:
 		UI_render_string(&debugger, " CPU <MMU> GPU  APU  LOG", 0, 0);
@@ -193,10 +223,6 @@ void Debugger_draw() {
 		break;
 	case TAB_APU:
 		UI_render_string(&debugger, " CPU  MMU  GPU <APU> LOG", 0, 0);
-		UI_render_string(&debugger, "-----------------------------------------------------", 0, 1);
-		break;
-	case TAB_LOG:
-		UI_render_string(&debugger, " CPU  MMU  GPU  APU <LOG>", 0, 0);
 		UI_render_string(&debugger, "-----------------------------------------------------", 0, 1);
 		break;
 	}

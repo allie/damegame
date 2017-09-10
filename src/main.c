@@ -1,16 +1,3 @@
-#if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(__BORLANDC__)
-#define OS_WIN
-#endif
-
-#ifndef OS_WIN
-#include <pthread.h>
-#else
-#define DWORD WIN_DWORD
-#include <windows.h>
-#undef DWORD
-#define DWORD CGB_DWORD
-#endif
-
 #include "common.h"
 #include "cpu.h"
 #include "mmu.h"
@@ -19,24 +6,12 @@
 #include "ui.h"
 #include <sdl2/sdl.h>
 
-#ifdef OS_WIN
-#undef DWORD
-#define DWORD ambiguous use CGB_DWORD
-#endif
-
+SDL_Thread* emu_thread;
 extern CPU cpu;
 extern GPU gpu;
 extern MMU mmu;
 
-#ifndef OS_WIN
-void* emulate(void* vargp) {
-#else
-WIN_DWORD WINAPI emulate(void* vargp) {
-#endif
-	MMU_init();
-	CPU_reset();
-	GPU_init();
-
+static int emulate(void* data) {
 	Cart_load_from_file("test.gb");
 
 	while(2) {
@@ -46,17 +21,16 @@ WIN_DWORD WINAPI emulate(void* vargp) {
 }
 
 int main(int argc, char** argv) {
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+		printf("SDL_Init error: %s\n", SDL_GetError());
+	}
+
 	MMU_init();
 	CPU_reset();
 	GPU_init();
 	UI_init();
 
-#ifndef OS_WIN
-	pthread_t emu_thread;
-	pthread_create(&emu_thread, NULL, emulate, NULL);
-#else
-	HANDLE emu_thread = CreateThread(NULL, 0, emulate, NULL, 0, NULL);
-#endif
+	emu_thread = SDL_CreateThread(emulate, "hardware", (void*)NULL);
 
 	UI_loop();
 	UI_destroy();

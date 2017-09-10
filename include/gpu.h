@@ -11,7 +11,7 @@
 typedef struct {
 	BYTE vram[0x2000];
 	BYTE tileset[384 * 8 * 8];
-	BYTE screen[160 * 144 * 4];
+	BYTE screen[160 * 144 * 3];
 	BYTE mode;
 	DWORD mode_clock;
 	BYTE line;

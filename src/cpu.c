@@ -1,5 +1,6 @@
 #include "cpu.h"
 #include "mmu.h"
+#include "debugger.h"
 #include <string.h>
 
 CPU cpu;
@@ -1179,9 +1180,6 @@ void CPU_reset(void) {
 }
 
 int CPU_step() {
-	// Stash the CPU state
-	memcpy(&(cpu_history.states[cpu_history.ptr++]), &cpu, sizeof(cpu));
-
 	cpu.ins_clock.m = 0;
 
 	// TODO: Interrupts
@@ -1201,6 +1199,13 @@ int CPU_step() {
 	*/
 	cpu.sys_clock.m += cpu.ins_clock.m;
 	cpu.sys_clock.t += cpu.ins_clock.t;
+
+	// Stash the CPU state
+	cpu_history.ptr = cpu_history.ptr == 0xFFFF ? 0 : cpu_history.ptr + 1;
+	memcpy(&(cpu_history.states[cpu_history.ptr]), &cpu, sizeof(cpu));
+
+	// Update the debugger
+	Debugger_update();
 
 	return cpu.ins_clock.m;
 }

@@ -1,11 +1,12 @@
 #include "ui.h"
+#include "lcd.h"
 #include "debugger.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
+UIWindow debugger;
 UIWindow lcd;
-extern UIWindow debugger;
 UIWindow options;
 
 const unsigned char font_tex[] = {
@@ -23,10 +24,6 @@ static void UI_scale(UIWindow* ui_window, int delta) {
 }
 
 void UI_init() {
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-		printf("SDL_Init error: %s\n", SDL_GetError());
-	}
-
 	lcd.visible = 1;
 	lcd.base_width = 160;
 	lcd.base_height = 144;
@@ -95,6 +92,9 @@ void UI_init() {
 
 	options.font = SDL_CreateTexture(options.renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STATIC, 128, 128);
 	SDL_UpdateTexture(options.font, NULL, font_tex, 128 * 3);
+
+	LCD_init();
+	Debugger_init();
 }
 
 void UI_destroy() {
@@ -186,20 +186,11 @@ void UI_loop() {
 		}
 
 		if (lcd.visible) {
-			// UI_update(&lcd);
-		}
-
-		if (debugger.visible) {
-			// UI_update(&debugger);
-			Debugger_update();
+			LCD_draw();
 		}
 
 		if (options.visible) {
 			// UI_update(&options);
-		}
-
-		if (lcd.visible) {
-			// UI_draw(&lcd);
 		}
 
 		if (debugger.visible) {

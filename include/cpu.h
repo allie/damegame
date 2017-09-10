@@ -39,7 +39,7 @@
 #define FLAG_H cpu.h
 #define FLAG_C cpu.c
 
-#define HISTORY_LIMIT 0xFFFFFFFF
+#define HISTORY_LIMIT 0x10000
 
 typedef struct {
 	DWORD m; // Machine cycles
@@ -74,7 +74,7 @@ typedef struct {
 
 typedef struct {
 	CPU states[HISTORY_LIMIT];
-	DWORD ptr;
+	WORD ptr;
 } CPU_history;
 
 // Executive functions

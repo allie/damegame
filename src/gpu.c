@@ -1,6 +1,8 @@
 #include <string.h>
 #include "gpu.h"
 #include "cpu.h"
+#include "lcd.h"
+#include <sdl2/sdl.h>
 
 GPU gpu;
 extern CPU cpu;
@@ -25,8 +27,7 @@ static void GPU_render_scanline() {
 		gpu.screen[screen_off] = color.r;
 		gpu.screen[screen_off + 1] = color.g;
 		gpu.screen[screen_off + 2] = color.b;
-		gpu.screen[screen_off + 3] = 1;
-		screen_off += 4;
+		screen_off += 3;
 
 		if (++x == 8) {
 			x = 0;
@@ -37,10 +38,6 @@ static void GPU_render_scanline() {
 			}
 		}
 	}
-}
-
-static void GPU_push_to_screen() {
-
 }
 
 void GPU_init() {
@@ -116,7 +113,7 @@ void GPU_step() {
 
 			if (gpu.line == 143) {
 				gpu.mode = MODE_VBLANK;
-				GPU_push_to_screen();
+				LCD_update();
 			} else {
 				gpu.mode = MODE_OAM;
 			}

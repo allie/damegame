@@ -1,16 +1,7 @@
 #include "disassembler.h"
-#include "cpu.h"
-#include "mmu.h"
 #include <stdio.h>
 
-extern CPU cpu;
-extern MMU mmu;
-
-void Disassembler_log() {
-
-}
-
-void Disassembler_print(char* buf, size_t size) {
+void Disassembler_print(CPU cpu, char* buf, size_t size) {
 	switch (cpu.op) {
 	case 0x00: snprintf(buf, size, "%s", "nop"); break;
 	case 0x01: snprintf(buf, size, "%s0x%04X", "ld bc,", cpu.operand); break;
@@ -572,6 +563,6 @@ void Disassembler_print(char* buf, size_t size) {
 	case 0xFC: snprintf(buf, size, "%s", "nop"); break;
 	case 0xFD: snprintf(buf, size, "%s", "nop"); break;
 	case 0xFE: snprintf(buf, size, "%s0x%02X", "cp ", cpu.operand); break;
-	case 0xFF: snprintf(buf, size, "%s0x%02X", "rst ", 0x08); break;
+	case 0xFF: snprintf(buf, size, "%s0x%02X", "rst ", 0x38); break;
 	}
 }
