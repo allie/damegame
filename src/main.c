@@ -1,5 +1,6 @@
 #include "common.h"
 #include "config.h"
+#include "input.h"
 #include "cpu.h"
 #include "mmu.h"
 #include "gpu.h"
