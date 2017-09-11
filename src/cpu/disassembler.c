@@ -22,7 +22,7 @@ void Disassembler_print(CPU cpu, char* buf, size_t size) {
 
 	case 0x10: snprintf(buf, size, "%s", "stop"); break;
 	case 0x11: snprintf(buf, size, "%s0x%04X", "ld de,", cpu.operand); break;
-	case 0x12: snprintf(buf, size, "%s0x%04X", "ld (de),", cpu.operand); break;
+	case 0x12: snprintf(buf, size, "%s", "ld (de),a"); break;
 	case 0x13: snprintf(buf, size, "%s", "inc de"); break;
 	case 0x14: snprintf(buf, size, "%s", "inc d"); break;
 	case 0x15: snprintf(buf, size, "%s", "dec d"); break;
@@ -37,6 +37,7 @@ void Disassembler_print(CPU cpu, char* buf, size_t size) {
 	case 0x1E: snprintf(buf, size, "%s0x%02X", "ld e,", cpu.operand); break;
 	case 0x1F: snprintf(buf, size, "%s", "rra"); break;
 
+	case 0x20: snprintf(buf, size, "%s0x%02X", "jr nz,", cpu.operand); break;
 	case 0x21: snprintf(buf, size, "%s0x%04X", "ld hl,", cpu.operand); break;
 	case 0x22: snprintf(buf, size, "%s", "ldi (hl),a"); break;
 	case 0x23: snprintf(buf, size, "%s", "inc hl"); break;
@@ -53,6 +54,7 @@ void Disassembler_print(CPU cpu, char* buf, size_t size) {
 	case 0x2E: snprintf(buf, size, "%s0x%02X", "ld l,", cpu.operand); break;
 	case 0x2F: snprintf(buf, size, "%s", "cpl"); break;
 
+	case 0x20: snprintf(buf, size, "%s0x%02X", "jr nc,", cpu.operand); break;
 	case 0x31: snprintf(buf, size, "%s0x%04X", "ld sp,", cpu.operand); break;
 	case 0x32: snprintf(buf, size, "%s", "ldd (hl),a"); break;
 	case 0x33: snprintf(buf, size, "%s", "inc sp"); break;

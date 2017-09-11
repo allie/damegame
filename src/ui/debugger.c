@@ -24,6 +24,7 @@ static int tab = 0;
 static int mmu_top_row = 0;
 static char mmu_str[0x10000 / 8 * 38];
 static char ins_str[40 * 26];
+static FILE* logfile;
 
 static void Debugger_print_registers(int x, int y) {
 	UI_render_string(&debugger, "REGISTERS", x, y);
@@ -144,6 +145,8 @@ static void Debugger_update_cpu() {
 		Disassembler_print(cpu_history.states[history_addr], buf + (i * 40), 40);
 	}
 
+	fprintf(logfile, "%s\n", buf);
+
 	SDL_LockMutex(debugger_mutex);
 	memcpy(ins_str, buf, 40 * 26);
 	SDL_UnlockMutex(debugger_mutex);
@@ -169,6 +172,14 @@ static void Debugger_change_tab(int diff) {
 
 void Debugger_init() {
 	debugger_mutex = SDL_CreateMutex();
+	logfile = fopen("log", "w");
+	if (logfile == NULL) {
+		printf("Unable to open debug log file for writing.\n");
+	}
+}
+
+void Debugger_destroy() {
+	fclose(logfile);
 }
 
 void Debugger_handle_input(SDL_Event event) {

@@ -411,10 +411,10 @@ static void LDHamn(void) { cpu.operand = MMU_read_8(REG_PC++); REG_A = MMU_read_
 
 // 16-bit loads
 // LD dd, nn
-static void LDBCnn(void) { MMU_read_16(REG_PC); REG_BC = cpu.operand; REG_PC += 2; }
-static void LDDEnn(void) { MMU_read_16(REG_PC); REG_DE = cpu.operand; REG_PC += 2; }
-static void LDHLnn(void) { MMU_read_16(REG_PC); REG_HL = cpu.operand; REG_PC += 2; }
-static void LDSPnn(void) { MMU_read_16(REG_PC); REG_SP = cpu.operand; REG_PC += 2; }
+static void LDBCnn(void) { cpu.operand = MMU_read_16(REG_PC); REG_BC = cpu.operand; REG_PC += 2; }
+static void LDDEnn(void) { cpu.operand = MMU_read_16(REG_PC); REG_DE = cpu.operand; REG_PC += 2; }
+static void LDHLnn(void) { cpu.operand = MMU_read_16(REG_PC); REG_HL = cpu.operand; REG_PC += 2; }
+static void LDSPnn(void) { cpu.operand = MMU_read_16(REG_PC); REG_SP = cpu.operand; REG_PC += 2; }
 // LD (nn), SP
 static void LDmnnSP(void) { cpu.operand = MMU_read_16(REG_PC); MMU_write_16(cpu.operand, REG_SP); REG_PC += 2; }
 // LD SP, HL

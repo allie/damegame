@@ -6,6 +6,7 @@
 #include "gpu.h"
 #include "cart.h"
 #include "ui.h"
+#include "debugger.h"
 #include <sdl2/sdl.h>
 
 SDL_Thread* emu_thread;
@@ -14,7 +15,7 @@ extern GPU gpu;
 extern MMU mmu;
 
 static int emulate(void* data) {
-	Cart_load_from_file("test.gb");
+	Cart_load_from_file("tests/individual/07-jr,jp,call,ret,rst.gb");
 
 	while(2) {
 		CPU_step();
@@ -55,6 +56,7 @@ int main(int argc, char** argv) {
 	}
 
 	UI_destroy();
+	Debugger_destroy();
 
 	return 0;
 }

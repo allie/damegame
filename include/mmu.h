@@ -10,9 +10,6 @@ typedef struct {
 	BYTE eram[0x2000];
 	BYTE wram[0x2000];
 	BYTE zram[0x80];
-#ifdef __DEBUG__
-	BYTE* ram;
-#endif
 } MMU;
 
 void MMU_init();

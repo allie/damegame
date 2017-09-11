@@ -131,6 +131,11 @@ BYTE MMU_read_8(WORD addr) {
 }
 
 void MMU_write_8(WORD addr, BYTE val) {
+#ifdef __DEBUG__
+	if (addr == 0xFF02 && val == 0x81) {
+		printf("%02X\n", MMU_read_8(0xFF01));
+	}
+#endif
 	BYTE* ptr = MMU_get_ptr(addr);
 	if (ptr) {
 		*ptr = val;
