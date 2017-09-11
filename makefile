@@ -3,7 +3,7 @@ CFLAGS=-std=c99 -c -Wall -D_POSIX_C_SOURCE=200112L -DUNOFFICIAL_MODE -g -Iinclud
 LDFLAGS=-lSDL2_image -lSDL2 -lm
 SOURCES=$(shell find src -name "*.c")
 OBJECTS=$(SOURCES:.c=.o)
-EXECUTABLE=gb
+EXECUTABLE=damegame
 OS=$(shell gcc -dumpmachine)
 
 ifneq (, $(findstring mingw, $(OS)))

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "config.h"
 #include "cpu.h"
 #include "mmu.h"
 #include "gpu.h"
@@ -32,7 +33,26 @@ int main(int argc, char** argv) {
 
 	emu_thread = SDL_CreateThread(emulate, "hardware", (void*)NULL);
 
-	UI_loop();
+	int running = 1;
+	SDL_Event event;
+
+	while (running) {
+		while (SDL_PollEvent(&event) != 0) {
+			switch (event.type) {
+			case SDL_QUIT:
+				running = 0;
+				break;
+
+			case SDL_KEYDOWN:
+				Input_handle(event.key.keysym);
+				break;
+			}
+		}
+
+		UI_update();
+		UI_draw();
+	}
+
 	UI_destroy();
 
 	return 0;

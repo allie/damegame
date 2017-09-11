@@ -18,6 +18,7 @@ void UI_destroy();
 void UI_render_string(UIWindow*, const char*, unsigned, unsigned);
 void UI_render_hex(UIWindow*, unsigned long, unsigned, unsigned, unsigned);
 void UI_toggle(UIWindow*);
-void UI_loop();
+void UI_update();
+void UI_draw();
 
 #endif
